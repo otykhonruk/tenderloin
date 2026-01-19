@@ -1,0 +1,20 @@
+import asyncpg
+import json
+import os
+from contextlib import asynccontextmanager
+
+
+@asynccontextmanager
+async def get_connection(host='localhost'):
+    dsn = 'postgres://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{host}/{POSTGRES_DB}'
+    conn = await asyncpg.connect(dsn.format(**os.environ))
+    try:
+        await conn.set_type_codec(
+            'jsonb',
+            encoder=json.dumps,
+            decoder=json.loads,
+            schema='pg_catalog'
+        )
+        yield conn
+    finally:
+        await conn.close()

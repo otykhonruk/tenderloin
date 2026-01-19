@@ -4,10 +4,11 @@ from urllib.parse import urljoin
 
 import httpx
 
+from sources.spending import BASE_URL
+
 # Test client for spending.gov.ua API endpoints. See:
 # https://confluence-ext.spending.gov.ua/spaces/ds/pages/360614/API+Трансакції
 
-BASE_URL = 'https://api.spending.gov.ua/api/v2/api/transactions'
 
 PING = 'ping'
 LASTLOAD = 'lastload'
@@ -15,24 +16,34 @@ LASTLOAD = 'lastload'
 
 async def ping(session):
     "Service availability check"
-    async with session.get(urljoin(BASE_URL, PING)) as response:
-        return response.status
+    response = await session.get(urljoin(BASE_URL, PING))
+    return response.status_code
 
 
 async def lastload(session):
     "Get last loaded date from all sources"
-    async with session.get(urljoin(BASE_URL, LASTLOAD)) as response:
-        return await response.json()
+    response = await session.get(urljoin(BASE_URL, LASTLOAD))
+    return await response.json()
 
 
 async def transactions(session, params=None):
     "Get transactions with optional filtering parameters"
-    async with session.get(BASE_URL, params=params) as response:
-        return await response.json()
+    response = await session.get(BASE_URL, params=params)
+    return await response.json()
+
+
+async def transaction(session, db, id_):
+    "Get a specific transaction by database and ID"
+    
+    url = urljoin(BASE_URL)
+    async with session.get(url) as response:
+        if response.status_code != httpx.codes.OK:
+            response.raise_for_status()
+        data = await response.json()
 
 
 async def main():
-    async with httpx.Client() as session:
+    async with httpx.AsyncClient(http2=True) as session:
         status = await ping(session)
         print(f'Ping status: {status}')
         print('\nLast loaded data (top 10):')

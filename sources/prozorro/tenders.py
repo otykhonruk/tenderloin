@@ -1,38 +1,40 @@
 import asyncio
+import json
+import os
 from urllib.parse import urljoin
 
+import asyncpg
 import httpx
 
+from sources.prozorro import get
+from utils.db import get_connection
 
-URL = 'https://public-api.prozorro.gov.ua/api/2.5/'
+
+GET_DOC_BY_EDRPOU_QUERY = '''
+ SELECT doc FROM ingestion_log WHERE src=$1 and doc->>\'UA-EDR\'=$2
+'''
+
+# ЄДРПОУ
+# select doc->'procuringEntity'->'identifier'->>'id' from ingestion_log
 
 
 async def tenders(session, **params):
     "Get tenders with optional filtering parameters"
-    response = await session.get(urljoin(URL, 'tenders'), params=params)
-    if response.status_code == httpx.codes.OK:
-        return response.json()['data']
+    response = await get(session, urljoin(URL, 'tenders'), params=params)
 
 
 async def tender(session, tender_id):
     "Get a specific tender by ID"
-    response = await session.get(urljoin(URL, 'tenders/' + tender_id))
-    if response.status_code == httpx.codes.OK:
-        return response.json()
-    else:
-        print(f'Tender id: {tender_id}')
-        print(response.request.url)
-        print(response)
+    path = f'tenders/{tender_id}'
+    return await get(session, urljoin(URL, path))
 
 
 async def main(args):
-        from pprint import pprint
-
-        async with httpx.AsyncClient(http2=True) as session:
-            # result = await tenders(session, descending=1)
-            
-            result = await tender(session, args.tender)
-            pprint(result)
+    async with httpx.AsyncClient(http2=True) as session:
+        result = await tenders(session, descending=1)
+        async with get_connection() as db_conn:
+            for t in result:
+                await ingest_tender(session, db_conn, t['id'])
 
 
 if __name__ == '__main__':

@@ -1,0 +1,35 @@
+services:
+  postgres:
+    image: postgres
+    container_name: postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - 5432:5432
+    volumes:
+      - ./data/db:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # prefect-server:
+  #   image: prefecthq/prefect:3-latest
+  #   container_name: prefect-server
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #   environment:
+  #     PREFECT_API_DATABASE_CONNECTION_URL: >
+  #       postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+  #     PREFECT_API_URL: ${PREFECT_API_URL}
+  #   command: >
+  #     prefect server start --host 0.0.0.0
+  #   ports:
+  #     - "4200:4200"
+
+volumes:
+  postgres-data:
