@@ -1,0 +1,45 @@
+-- name: insert_transaction!
+insert into spd_transaction_raw values (
+ :id,
+ :doc_vob,
+ :doc_vob_name,
+ :doc_number,
+ :doc_date,
+ :doc_v_date,
+ :trans_date,
+ :amount,
+ :amount_cop,
+ :currency,
+ :payer_edrpou,
+ :payer_name,
+ :payer_account,
+ :payer_mfo,
+ :payer_bank,
+ :payer_edrpou_fact,
+ :payer_name_fact,
+ :recipt_edrpou,
+ :recipt_name,
+ :recipt_account,
+ :recipt_mfo,
+ :recipt_bank,
+ :recipt_edrpou_fact,
+ :recipt_name_fact,
+ :payment_details,
+ :doc_add_attr,
+ :region_id,
+ :payment_type,
+ :payment_data,
+ :source_id,
+ :source_name,
+ :kekv,
+ :kpk,
+ :contractId,
+ :contractNumber,
+ :budgetCode,
+ :system_key,
+ :system_key_ff
+);
+
+
+-- name: get_transaction_raw_by_id^
+select * from spd_transaction_raw where id = :id;

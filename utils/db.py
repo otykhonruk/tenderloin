@@ -7,7 +7,7 @@ from contextlib import asynccontextmanager
 @asynccontextmanager
 async def get_connection(host='localhost'):
     dsn = 'postgres://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{host}/{POSTGRES_DB}'
-    conn = await asyncpg.connect(dsn.format(**os.environ))
+    conn = await asyncpg.connect(dsn.format(**os.environ | {'host': host}))
     try:
         await conn.set_type_codec(
             'jsonb',
