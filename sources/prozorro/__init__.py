@@ -8,4 +8,4 @@ async def get(session, path, **params):
     "Generic GET request to the Prozorro API"
     response = await session.get(urljoin(BASE_URL, path), params=params)
     response.raise_for_status()
-    return response.json()['data']
+    return response.json()

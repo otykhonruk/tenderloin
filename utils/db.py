@@ -1,7 +1,11 @@
+import aiosql
 import asyncpg
 import json
 import os
 from contextlib import asynccontextmanager
+
+
+QUERIES = aiosql.from_path('sql/queries', 'asyncpg', mandatory_parameters=False)
 
 
 @asynccontextmanager
