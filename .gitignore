@@ -14,3 +14,7 @@ wheels/
 
 # Persistent data
 data
+
+# Configuration
+.env
+.streamlit
