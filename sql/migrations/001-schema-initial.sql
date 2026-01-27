@@ -1,17 +1,17 @@
--- Table for storing raw responses from prozorro and dream APIs
-create table if not exists docs_raw (
-    id serial primary key,
-    modified_at timestamp default current_timestamp,
-    src char(1) not null, -- P: prozorro, D: dream
-    stage integer not null default 0,
-    doc_id text not null,
+create table if not exists prozorro_tenders (
+    doc_id char(32) primary key,
     doc jsonb
 );
-create unique index if not exists idx_raw_data_src_doc on raw_data (src, doc_id);
 
+create table if not exists dream_ideas (
+    id UUID primary key, -- :"oo009976-5wbt-4kay-8ip8-ef17qkn15zuk"
+    status text, -- "cancelled:duplicate"
+    code text, --  "110923-48292E0D"
+    cdu_response jsonb
+);
 
 -- Raw data from spending.gov.ua transactions API endpoint
-create table if not exists spd_transaction_raw (
+create table if not exists spd_transaction (
     id bigint primary key, -- унікальний ідентифікатор трансакції в Системі
     doc_vob	text, -- код розрахункового документа
     doc_vob_name text, -- назва коду розрахункового документа
