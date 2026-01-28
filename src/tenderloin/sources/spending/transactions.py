@@ -1,44 +1,43 @@
 import asyncio
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from operator import itemgetter
 from pprint import pprint
-from urllib.parse import urljoin
 
 import aiosql
 import httpx
 
-from sources.spending import BASE_URL
-from utils.db import get_connection, QUERIES
+from tenderloin.sources.spending import get
+from tenderloin.utils.db import get_connection, QUERIES
+
 
 # Test client for spending.gov.ua API endpoints. See:
 # https://confluence-ext.spending.gov.ua/spaces/ds/pages/360614/API+Трансакції
 
 
-PING = 'ping'
-LASTLOAD = 'lastload'
+PING = 'transactions/ping'
+LASTLOAD = 'transactions/lastload'
+TRANSACTIONS = 'transactions/'
 
 logger = logging.getLogger(__name__)
 
 
 async def ping(session, _):
     "Service availability check"
-    response = await session.get(urljoin(BASE_URL, PING))
+    response = await get(session, PING)
     return response.status_code
 
 
-# data.sort(key=itemgetter('lastLoad'), reverse=True)
 async def lastload(session, _):
     "Get last loaded date from all sources"
-    response = await session.get(urljoin(BASE_URL, LASTLOAD))
-    respose.raise_for_status()
-    return response.json()
-
+    response = await get(session, LASTLOAD)
+    data = response.json()
+    data.sort(key=itemgetter('lastLoad'), reverse=True)
+    return data
 
 async def transactions(session, params):
     "Get transactions with optional filtering parameters"
-    response = await session.get(BASE_URL, params=params)
-    response.raise_for_status()
+    response = await get(session, TRANSACTIONS, params=params)
     return response.json()
 
 
@@ -74,7 +73,7 @@ async def transactions_by_recipient(session, edrpou, end_date=None):
     "Get transactions for a specific EDRPOU code."
     if end_date is None:
         end_date = datetime.utcnow()
-    start_date = end_date - timedelta(days=90)
+        start_date = end_date - timedelta(days=90)
 
     params = {
         'recipt_edrpous': edrpou,
@@ -86,14 +85,15 @@ async def transactions_by_recipient(session, edrpou, end_date=None):
     return response
 
 
-async def test_insert_transaction(db, transaction):
+async def test_insert_transactions(session, params):
     "Look for transaction, if not found, get, ingest into the database."
+    data = await transactions_on_date(session, date(2026,1,27))
     async with get_connection() as conn:
-        await QUERIES.spending.insert_transaction(conn, **transaction)
+        for transaction in data:
+            await QUERIES.spending.insert_transaction(conn, **transaction)
 
 
 async def main(args):
-
     async with httpx.AsyncClient(http2=True) as session:
         coro = args.func
 
@@ -123,7 +123,7 @@ if __name__ == '__main__':
     transactions_parser.add_argument('-e', '--enddate', help='End date in the yyyy-mm-dd format')
     transactions_parser.add_argument('-p', '--payer', help='Comma-separated list of payer EDRPOU codes')
     transactions_parser.add_argument('-r', '--recipient', help='Comma-separated list of recipient EDRPOU codes')
-    transactions_parser.set_defaults(func=transactions)
+    transactions_parser.set_defaults(func=test_insert_transactions)
     args = parser.parse_args()
 
     asyncio.run(main(args))

@@ -4,10 +4,13 @@ values(:id, :status, :code, :cdu_response)
 on conflict do nothing
 
 -- name: get_idea_by_id(id)$
-select doc from dream_ideas where id=:id
+select id, status, code, cdu_response from dream_ideas where id=:id
 
 -- name: ideas_exist(ids)
 select id from dream_ideas where id = any(:ids)
+
+-- name: list_ideas()
+select id, status, code, cdu_response from dream_ideas limit 10;
 
 -- name: get_doc_by_edrpou(edrpou)
 select doc from docs_raw where doc->>\'UA-EDR\'=:edrpou

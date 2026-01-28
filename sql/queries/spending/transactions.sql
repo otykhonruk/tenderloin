@@ -1,5 +1,5 @@
 -- name: insert_transaction!
-insert into spd_transaction_raw values (
+insert into spd_transaction values (
  :id,
  :doc_vob,
  :doc_vob_name,
@@ -42,4 +42,4 @@ insert into spd_transaction_raw values (
 
 
 -- name: get_transaction_raw_by_id^
-select * from spd_transaction_raw where id = :id;
+select * from spd_transaction where id = :id;
